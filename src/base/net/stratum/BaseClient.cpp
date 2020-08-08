@@ -58,7 +58,7 @@ void xmrig::BaseClient::setPool(const Pool &pool)
     m_user      = Env::expand(pool.user());
     m_password  = Env::expand(pool.password());
     m_rigId     = Env::expand(pool.rigId());
-    m_tag       = std::string(Tags::network()) + " " CYAN_BOLD_S + m_pool.url().data() + CLEAR;
+    m_tag       = std::string(Tags::miner()) + " " CYAN_BOLD_S + m_pool.url().data() + CLEAR;
 }
 
 
