@@ -29,13 +29,13 @@ const char *xmrig::Tags::config()
 }
 
 
-const char *xmrig::Tags::network()
+/* const char *xmrig::Tags::network()
 {
     static const char *tag = BLUE_BG_BOLD(WHITE_BOLD_S " net     ");
 
     return tag;
 }
-
+*/
 
 const char *xmrig::Tags::signal()
 {
@@ -56,7 +56,7 @@ const char *xmrig::Tags::cpu()
 
 const char *xmrig::Tags::miner()
 {
-    static const char *tag = MAGENTA_BG_BOLD(WHITE_BOLD_S " miner   ");
+    static const char *tag = MAGENTA_BG_BOLD(WHITE_BOLD_S " cruncher");
 
     return tag;
 }
