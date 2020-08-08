@@ -14,7 +14,7 @@ XMRig High performance, open source, cross platform RandomX, KawPow, CryptoNight
 - **OpenCL** for AMD GPUs.
 - **CUDA** for NVIDIA GPUs via external [CUDA plugin](https://github.com/xmrig/xmrig-cuda).
 
-<img src="doc/screenshot_v5_2_0.png" width="833" >
+<img src="xmrig_screen.png" width="833" >
 
 ## Download
 * Binary releases: https://github.com/davenport651/xmrig/releases/
