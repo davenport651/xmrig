@@ -120,17 +120,17 @@ void xmrig::Network::execCommand(char command)
 void xmrig::Network::onActive(IStrategy *strategy, IClient *client)
 {
     if (m_donate && m_donate == strategy) {
-        LOG_NOTICE("%s " WHITE_BOLD("dev donate started"), Tags::network());
+        //LOG_NOTICE("%s " WHITE_BOLD("dev donate started"), Tags::network());
         return;
     }
 
     const char *tlsVersion = client->tlsVersion();
-    LOG_INFO("%s " WHITE_BOLD("use %s ") CYAN_BOLD("%s:%d ") GREEN_BOLD("%s") " " BLACK_BOLD("%s"),
-             Tags::network(), client->mode(), client->pool().host().data(), client->pool().port(), tlsVersion ? tlsVersion : "", client->ip().data());
+    //LOG_INFO("%s " WHITE_BOLD("use %s ") CYAN_BOLD("%s:%d ") GREEN_BOLD("%s") " " BLACK_BOLD("%s"),
+    //         Tags::network(), client->mode(), client->pool().host().data(), client->pool().port(), tlsVersion ? tlsVersion : "", client->ip().data());
 
     const char *fingerprint = client->tlsFingerprint();
     if (fingerprint != nullptr) {
-        LOG_INFO("%s " BLACK_BOLD("fingerprint (SHA-256): \"%s\""), Tags::network(), fingerprint);
+    //    LOG_INFO("%s " BLACK_BOLD("fingerprint (SHA-256): \"%s\""), Tags::network(), fingerprint);
     }
 }
 
@@ -199,12 +199,12 @@ void xmrig::Network::onLogin(IStrategy *, IClient *client, rapidjson::Document &
 void xmrig::Network::onPause(IStrategy *strategy)
 {
     if (m_donate && m_donate == strategy) {
-        LOG_NOTICE("%s " WHITE_BOLD("dev donate finished"), Tags::network());
+    //    LOG_NOTICE("%s " WHITE_BOLD("dev donate finished"), Tags::network());
         m_strategy->resume();
     }
 
     if (!m_strategy->isActive()) {
-        LOG_ERR("%s " RED("no active pools, stop mining"), Tags::network());
+        LOG_ERR("%s " RED("no active pools, stop burning"), Tags::miner());
 
         return m_controller->miner()->pause();
     }
@@ -256,12 +256,12 @@ void xmrig::Network::setJob(IClient *client, const Job &job, bool donate)
     const char *scale = NetworkState::scaleDiff(diff);
 
     if (job.height()) {
-        LOG_INFO("%s " MAGENTA_BOLD("new job") " from " WHITE_BOLD("%s:%d") " diff " WHITE_BOLD("%" PRIu64 "%s") " algo " WHITE_BOLD("%s") " height " WHITE_BOLD("%" PRIu64),
-                 Tags::network(), client->pool().host().data(), client->pool().port(), diff, scale, job.algorithm().shortName(), job.height());
+    //    LOG_INFO("%s " MAGENTA_BOLD("new job") " from " WHITE_BOLD("%s:%d") " diff " WHITE_BOLD("%" PRIu64 "%s") " algo " WHITE_BOLD("%s") " height " WHITE_BOLD("%" PRIu64),
+    //             Tags::network(), client->pool().host().data(), client->pool().port(), diff, scale, job.algorithm().shortName(), job.height());
     }
     else {
-        LOG_INFO("%s " MAGENTA_BOLD("new job") " from " WHITE_BOLD("%s:%d") " diff " WHITE_BOLD("%" PRIu64 "%s") " algo " WHITE_BOLD("%s"),
-                 Tags::network(), client->pool().host().data(), client->pool().port(), diff, scale, job.algorithm().shortName());
+    //    LOG_INFO("%s " MAGENTA_BOLD("new job") " from " WHITE_BOLD("%s:%d") " diff " WHITE_BOLD("%" PRIu64 "%s") " algo " WHITE_BOLD("%s"),
+    //             Tags::network(), client->pool().host().data(), client->pool().port(), diff, scale, job.algorithm().shortName());
     }
 
     if (!donate && m_donate) {
