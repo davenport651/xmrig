@@ -56,7 +56,7 @@ const char *xmrig::Tags::cpu()
 
 const char *xmrig::Tags::miner()
 {
-    static const char *tag = MAGENTA_BG_BOLD(WHITE_BOLD_S " cruncher");
+    static const char *tag = MAGENTA_BG_BOLD(WHITE_BOLD_S " burner  ");
 
     return tag;
 }
