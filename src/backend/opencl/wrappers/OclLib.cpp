@@ -44,7 +44,7 @@
 
 static uv_lib_t oclLib;
 
-static const char *kErrorTemplate                    = MAGENTA_BG_BOLD(WHITE_BOLD_S " ocl ") RED(" error ") RED_BOLD("%s") RED(" when calling ") RED_BOLD("%s");
+static const char *kErrorTemplate                    = MAGENTA_BG_BOLD(WHITE_BOLD_S " opencl  ") RED(" error ") RED_BOLD("%s") RED(" when calling ") RED_BOLD("%s");
 
 static const char *kBuildProgram                     = "clBuildProgram";
 static const char *kCreateBuffer                     = "clCreateBuffer";
@@ -836,7 +836,13 @@ xmrig::String xmrig::OclLib::getProgramBuildLog(cl_program program, cl_device_id
         return String();
     }
 
-    char *log = new char[size + 1]();
+    char* log = nullptr;
+    try {
+        log = new char[size + 1]();
+    }
+    catch (...) {
+        return String();
+    }
 
     if (getProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, size, log, nullptr) != CL_SUCCESS) {
         delete [] log;

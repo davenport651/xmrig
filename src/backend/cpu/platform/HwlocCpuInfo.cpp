@@ -1,12 +1,6 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2019 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2020 XMRig       <support@xmrig.com>
+ * Copyright (c) 2018-2020 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2020 XMRig       <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -91,20 +85,21 @@ static inline void findByType(hwloc_obj_t obj, hwloc_obj_type_t type, func lambd
 }
 
 
+static inline size_t countByType(hwloc_topology_t topology, hwloc_obj_type_t type)
+{
+    const int count = hwloc_get_nbobjs_by_type(topology, type);
+
+    return count > 0 ? static_cast<size_t>(count) : 0;
+}
+
+
+#ifndef XMRIG_ARM
 static inline std::vector<hwloc_obj_t> findByType(hwloc_obj_t obj, hwloc_obj_type_t type)
 {
     std::vector<hwloc_obj_t> out;
     findByType(obj, type, [&out](hwloc_obj_t found) { out.emplace_back(found); });
 
     return out;
-}
-
-
-static inline size_t countByType(hwloc_topology_t topology, hwloc_obj_type_t type)
-{
-    const int count = hwloc_get_nbobjs_by_type(topology, type);
-
-    return count > 0 ? static_cast<size_t>(count) : 0;
 }
 
 
@@ -122,6 +117,7 @@ static inline bool isCacheExclusive(hwloc_obj_t obj)
     const char *value = hwloc_obj_get_info_by_name(obj, "Inclusive");
     return value == nullptr || value[0] != '1';
 }
+#endif
 
 
 } // namespace xmrig
@@ -191,6 +187,12 @@ xmrig::HwlocCpuInfo::HwlocCpuInfo()
             m_nodeset.emplace_back(node->os_index);
         }
     }
+
+#   if defined(XMRIG_OS_MACOS) && defined(XMRIG_ARM)
+    if (L2() == 33554432U && m_cores == 8 && m_cores == m_threads) {
+        m_cache[2] = 16777216U;
+    }
+#   endif
 }
 
 
@@ -218,10 +220,11 @@ xmrig::CpuThreads xmrig::HwlocCpuInfo::threads(const Algorithm &algorithm, uint3
 {
 #   ifdef XMRIG_ALGO_ASTROBWT
     if (algorithm == Algorithm::ASTROBWT_DERO) {
-        return BasicCpuInfo::threads(algorithm, limit);
+        return allThreads(algorithm, limit);
     }
 #   endif
 
+#   ifndef XMRIG_ARM
     if (L2() == 0 && L3() == 0) {
         return BasicCpuInfo::threads(algorithm, limit);
     }
@@ -263,11 +266,35 @@ xmrig::CpuThreads xmrig::HwlocCpuInfo::threads(const Algorithm &algorithm, uint3
     }
 
     return threads;
+#   else
+    return allThreads(algorithm, limit);
+#   endif
 }
+
+
+xmrig::CpuThreads xmrig::HwlocCpuInfo::allThreads(const Algorithm &algorithm, uint32_t limit) const
+{
+    CpuThreads threads;
+    threads.reserve(m_threads);
+
+    hwloc_obj_t pu = nullptr;
+
+    while ((pu = hwloc_get_next_obj_by_type(m_topology, HWLOC_OBJ_PU, pu)) != nullptr) {
+        threads.add(pu->os_index, 0);
+    }
+
+    if (threads.isEmpty()) {
+        return BasicCpuInfo::threads(algorithm, limit);
+    }
+
+    return threads;
+}
+
 
 
 void xmrig::HwlocCpuInfo::processTopLevelCache(hwloc_obj_t cache, const Algorithm &algorithm, CpuThreads &threads, size_t limit) const
 {
+#   ifndef XMRIG_ARM
     constexpr size_t oneMiB = 1024U * 1024U;
 
     size_t PUs = countByType(cache, HWLOC_OBJ_PU);
@@ -366,4 +393,5 @@ void xmrig::HwlocCpuInfo::processTopLevelCache(hwloc_obj_t cache, const Algorith
 
         pu_id++;
     }
+#   endif
 }

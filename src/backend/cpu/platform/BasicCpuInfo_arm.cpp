@@ -1,12 +1,6 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2019 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2020 XMRig       <support@xmrig.com>
+ * Copyright (c) 2018-2020 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2020 XMRig       <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,8 +16,13 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#include "base/tools/String.h"
+
+
 #include <array>
 #include <cstring>
+#include <fstream>
 #include <thread>
 
 
@@ -35,6 +34,17 @@
 
 #include "backend/cpu/platform/BasicCpuInfo.h"
 #include "3rdparty/rapidjson/document.h"
+
+
+#if defined(XMRIG_OS_UNIX)
+namespace xmrig {
+
+extern String cpu_name_arm();
+
+} // namespace xmrig
+#elif defined(XMRIG_OS_MACOS)
+#   include <sys/sysctl.h>
+#endif
 
 
 xmrig::BasicCpuInfo::BasicCpuInfo() :
@@ -52,6 +62,18 @@ xmrig::BasicCpuInfo::BasicCpuInfo() :
 #   else
     m_flags.set(FLAG_AES, true);
 #   endif
+#   endif
+
+#   if defined(XMRIG_OS_UNIX)
+    auto name = cpu_name_arm();
+    if (!name.isNull()) {
+        strncpy(m_brand, name, sizeof(m_brand) - 1);
+    }
+
+    m_flags.set(FLAG_PDPE1GB, std::ifstream("/sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages").good());
+#   elif defined(XMRIG_OS_MACOS)
+    size_t buflen = sizeof(m_brand);
+    sysctlbyname("machdep.cpu.brand_string", &m_brand, &buflen, nullptr, 0);
 #   endif
 }
 
@@ -78,7 +100,8 @@ rapidjson::Value xmrig::BasicCpuInfo::toJSON(rapidjson::Document &doc) const
     out.AddMember("brand",      StringRef(brand()), allocator);
     out.AddMember("aes",        hasAES(), allocator);
     out.AddMember("avx2",       false, allocator);
-    out.AddMember("x64",        isX64(), allocator);
+    out.AddMember("x64",        is64bit(), allocator); // DEPRECATED will be removed in the next major release.
+    out.AddMember("64_bit",     is64bit(), allocator);
     out.AddMember("l2",         static_cast<uint64_t>(L2()), allocator);
     out.AddMember("l3",         static_cast<uint64_t>(L3()), allocator);
     out.AddMember("cores",      static_cast<uint64_t>(cores()), allocator);
@@ -88,6 +111,12 @@ rapidjson::Value xmrig::BasicCpuInfo::toJSON(rapidjson::Document &doc) const
     out.AddMember("backend",    StringRef(backend()), allocator);
     out.AddMember("msr",        "none", allocator);
     out.AddMember("assembly",   "none", allocator);
+
+#   ifdef XMRIG_ARMv8
+    out.AddMember("arch", "aarch64", allocator);
+#   else
+    out.AddMember("arch", "aarch32", allocator);
+#   endif
 
     Value flags(kArrayType);
 
